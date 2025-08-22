@@ -1,0 +1,1389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mintly - AI NFT Creator</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-mint: #00ffa1;
+            --secondary-mint: #00ff7f;
+            --accent-mint: #7fff00;
+            --mint-glow: #00ff9f;
+            --bg-dark: #0a0f0a;
+            --bg-darker: #050805;
+            --bg-card: rgba(0, 255, 161, 0.03);
+            --border-mint: rgba(0, 255, 161, 0.15);
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0a0;
+            --text-mint: #00ffa1;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Gradient Background Animation */
+        .bg-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 25% 25%, rgba(0, 255, 161, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 75% 75%, rgba(127, 255, 0, 0.03) 0%, transparent 50%),
+                radial-gradient(circle at 50% 50%, rgba(0, 255, 127, 0.02) 0%, transparent 70%),
+                linear-gradient(135deg, var(--bg-darker) 0%, var(--bg-dark) 50%, var(--bg-darker) 100%);
+            animation: gradientShift 15s ease-in-out infinite;
+            z-index: -2;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { transform: rotate(0deg) scale(1); }
+            50% { transform: rotate(5deg) scale(1.02); }
+        }
+
+        /* Floating Particles */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .particle {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            background: var(--primary-mint);
+            border-radius: 50%;
+            opacity: 0.6;
+            animation: particleFloat linear infinite;
+            box-shadow: 0 0 6px var(--primary-mint);
+        }
+
+        @keyframes particleFloat {
+            0% {
+                transform: translateY(100vh) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.6;
+            }
+            90% {
+                opacity: 0.6;
+            }
+            100% {
+                transform: translateY(-100px) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem 2rem;
+            position: relative;
+            z-index: 100;
+            background: rgba(10, 15, 10, 0.85);
+            backdrop-filter: blur(25px);
+            border-bottom: 1px solid var(--border-mint);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            font-size: 1.8rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+
+        .logo-icon {
+            width: 45px;
+            height: 45px;
+            background: linear-gradient(135deg, var(--primary-mint), var(--secondary-mint));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            animation: logoGlow 3s ease-in-out infinite alternate;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .logo-icon::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            animation: logoSweep 4s linear infinite;
+        }
+
+        .logo-text {
+            background: linear-gradient(135deg, var(--text-primary), var(--primary-mint));
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 900;
+        }
+
+        @keyframes logoGlow {
+            from { box-shadow: 0 0 15px rgba(0, 255, 161, 0.3); }
+            to { box-shadow: 0 0 30px rgba(0, 255, 161, 0.6), 0 0 45px rgba(0, 255, 127, 0.3); }
+        }
+
+        @keyframes logoSweep {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+        }
+
+        .nav {
+            display: flex;
+            gap: 2.5rem;
+            list-style: none;
+        }
+
+        .nav a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            position: relative;
+            padding: 0.8rem 1.2rem;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            border-radius: 8px;
+        }
+
+        .nav a::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, var(--primary-mint), var(--secondary-mint));
+            border-radius: 8px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: -1;
+        }
+
+        .nav a:hover {
+            color: var(--bg-dark);
+            transform: translateY(-2px);
+        }
+
+        .nav a:hover::before {
+            opacity: 1;
+        }
+
+        .connect-btn {
+            background: linear-gradient(135deg, var(--primary-mint), var(--secondary-mint));
+            padding: 1rem 2.5rem;
+            border-radius: 50px;
+            color: var(--bg-dark);
+            text-decoration: none;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            border: none;
+            cursor: pointer;
+        }
+
+        .connect-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .connect-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(0, 255, 161, 0.4);
+        }
+
+        .connect-btn:hover::before {
+            left: 100%;
+        }
+
+        /* Mobile Menu */
+        .mobile-menu-btn {
+            display: none;
+            flex-direction: column;
+            gap: 4px;
+            cursor: pointer;
+            padding: 0.5rem;
+        }
+
+        .mobile-menu-btn span {
+            width: 25px;
+            height: 3px;
+            background: var(--primary-mint);
+            border-radius: 2px;
+            transition: all 0.3s ease;
+        }
+
+        /* Hero Section */
+        .hero {
+            text-align: center;
+            padding: 8rem 2rem;
+            position: relative;
+            min-height: 85vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .hero-badge {
+            background: var(--bg-card);
+            border: 1px solid var(--border-mint);
+            padding: 0.8rem 2rem;
+            border-radius: 50px;
+            margin-bottom: 2rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-mint);
+            backdrop-filter: blur(20px);
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .hero h1 {
+            font-size: clamp(3rem, 8vw, 6rem);
+            font-weight: 900;
+            margin-bottom: 2rem;
+            letter-spacing: -2px;
+            background: linear-gradient(135deg, var(--text-primary), var(--primary-mint), var(--secondary-mint));
+            background-size: 200% 200%;
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: gradientFlow 4s ease-in-out infinite;
+            position: relative;
+        }
+
+        @keyframes gradientFlow {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .hero p {
+            font-size: clamp(1.1rem, 3vw, 1.4rem);
+            color: var(--text-secondary);
+            margin-bottom: 3rem;
+            max-width: 600px;
+            line-height: 1.7;
+            font-weight: 400;
+        }
+
+        .cta-section {
+            width: 100%;
+            max-width: 600px;
+            margin: 2rem 0;
+        }
+
+        .prompt-container {
+            position: relative;
+            margin-bottom: 2rem;
+        }
+
+        .prompt-input {
+            background: var(--bg-card);
+            border: 2px solid var(--border-mint);
+            border-radius: 25px;
+            padding: 1.8rem 2.5rem;
+            width: 100%;
+            color: var(--text-primary);
+            backdrop-filter: blur(25px);
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            text-align: center;
+            font-weight: 400;
+        }
+
+        .prompt-input:focus {
+            outline: none;
+            border-color: var(--primary-mint);
+            box-shadow: 0 0 30px rgba(0, 255, 161, 0.2);
+            background: rgba(0, 255, 161, 0.05);
+        }
+
+        .prompt-input::placeholder {
+            color: var(--text-secondary);
+            font-weight: 400;
+        }
+
+        .generate-btn {
+            background: linear-gradient(135deg, var(--primary-mint), var(--secondary-mint));
+            border: none;
+            padding: 1.8rem 4rem;
+            border-radius: 25px;
+            color: var(--bg-dark);
+            font-weight: 700;
+            font-family: 'Inter', sans-serif;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            width: 100%;
+            max-width: 400px;
+            letter-spacing: 0.5px;
+        }
+
+        .generate-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .generate-btn:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(0, 255, 161, 0.3);
+        }
+
+        .generate-btn:hover::before {
+            left: 100%;
+        }
+
+        .tries-remaining {
+            margin-top: 1.5rem;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+            text-align: center;
+        }
+
+        .tries-remaining.warning {
+            color: #ff6b6b;
+        }
+
+        .generate-btn:disabled {
+            background: linear-gradient(135deg, #666, #888);
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        .generate-btn:disabled:hover {
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Tooltip */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 300px;
+            background: var(--bg-card);
+            border: 1px solid var(--primary-mint);
+            color: var(--text-primary);
+            text-align: center;
+            border-radius: 15px;
+            padding: 1rem;
+            position: absolute;
+            z-index: 1000;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -150px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 10px 30px rgba(0, 255, 161, 0.2);
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .tooltip .tooltiptext::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: var(--primary-mint) transparent transparent transparent;
+        }
+
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        /* Features Section */
+        .features {
+            padding: 8rem 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 5rem;
+        }
+
+        .section-tag {
+            color: var(--primary-mint);
+            font-size: 1rem;
+            font-weight: 600;
+            letter-spacing: 2px;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+        }
+
+        .section-title {
+            font-size: clamp(2.5rem, 6vw, 4rem);
+            font-weight: 800;
+            letter-spacing: -1px;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, var(--text-primary), var(--primary-mint));
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .section-description {
+            color: var(--text-secondary);
+            max-width: 700px;
+            margin: 0 auto;
+            line-height: 1.7;
+            font-size: 1.2rem;
+            font-weight: 400;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2.5rem;
+            margin-top: 5rem;
+        }
+
+        .feature-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-mint);
+            border-radius: 24px;
+            padding: 3rem;
+            backdrop-filter: blur(25px);
+            transition: all 0.4s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 255, 161, 0.05), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-12px);
+            border-color: var(--primary-mint);
+            box-shadow: 0 25px 60px rgba(0, 255, 161, 0.15);
+        }
+
+        .feature-card:hover::before {
+            left: 100%;
+        }
+
+        .feature-icon {
+            width: 90px;
+            height: 90px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card:nth-child(1) .feature-icon {
+            background: linear-gradient(135deg, var(--primary-mint), var(--secondary-mint));
+        }
+
+        .feature-card:nth-child(2) .feature-icon {
+            background: linear-gradient(135deg, var(--secondary-mint), var(--accent-mint));
+        }
+
+        .feature-card:nth-child(3) .feature-icon {
+            background: linear-gradient(135deg, var(--accent-mint), var(--primary-mint));
+        }
+
+        .feature-card:nth-child(4) .feature-icon {
+            background: linear-gradient(135deg, var(--primary-mint), var(--accent-mint));
+        }
+
+        .feature-card h4 {
+            font-size: 1.4rem;
+            margin-bottom: 1.2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: -0.5px;
+        }
+
+        .feature-card p {
+            color: var(--text-secondary);
+            line-height: 1.7;
+            font-size: 1rem;
+            font-weight: 400;
+        }
+
+        /* FAQ Section */
+        .faq {
+            padding: 8rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .faq h2 {
+            font-size: clamp(2.5rem, 5vw, 3.5rem);
+            margin-bottom: 4rem;
+            text-align: center;
+            font-weight: 800;
+            letter-spacing: -1px;
+            background: linear-gradient(135deg, var(--text-primary), var(--primary-mint));
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .faq-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border-mint);
+            border-radius: 20px;
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+            backdrop-filter: blur(25px);
+            transition: all 0.3s ease;
+        }
+
+        .faq-item:hover {
+            border-color: var(--primary-mint);
+            box-shadow: 0 15px 35px rgba(0, 255, 161, 0.1);
+        }
+
+        .faq-question {
+            padding: 2rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .faq-question:hover {
+            color: var(--primary-mint);
+        }
+
+        .faq-answer {
+            padding: 0 2rem 2rem;
+            color: var(--text-secondary);
+            line-height: 1.7;
+            display: none;
+            animation: fadeIn 0.3s ease;
+            font-size: 1rem;
+        }
+
+        .faq-item.active .faq-answer {
+            display: block;
+        }
+
+        .faq-toggle {
+            font-size: 1.5rem;
+            transition: all 0.3s ease;
+            color: var(--primary-mint);
+        }
+
+        .faq-item.active .faq-toggle {
+            transform: rotate(180deg);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* NFT Generation Area */
+        .nft-generation-area {
+            width: 100%;
+            max-width: 1200px;
+            margin: 3rem auto 0;
+            padding: 2.5rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border-mint);
+            border-radius: 24px;
+            backdrop-filter: blur(25px);
+        }
+
+        .loading-container {
+            text-align: center;
+            padding: 4rem;
+        }
+
+        .loading-text {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary-mint);
+            margin-bottom: 2rem;
+            letter-spacing: 1px;
+        }
+
+        .loading-dots {
+            display: flex;
+            justify-content: center;
+            gap: 0.8rem;
+        }
+
+        .loading-dot {
+            width: 14px;
+            height: 14px;
+            background: var(--primary-mint);
+            border-radius: 50%;
+            animation: loadingPulse 1.5s ease-in-out infinite;
+            box-shadow: 0 0 15px var(--primary-mint);
+        }
+
+        .loading-dot:nth-child(1) { animation-delay: 0s; }
+        .loading-dot:nth-child(2) { animation-delay: 0.3s; }
+        .loading-dot:nth-child(3) { animation-delay: 0.6s; }
+
+        @keyframes loadingPulse {
+            0%, 100% { 
+                transform: scale(1);
+                opacity: 0.6;
+            }
+            50% { 
+                transform: scale(1.4);
+                opacity: 1;
+                box-shadow: 0 0 25px var(--primary-mint);
+            }
+        }
+
+        .nft-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2.5rem;
+            margin-top: 2.5rem;
+        }
+
+        .nft-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border-mint);
+            border-radius: 20px;
+            padding: 1.5rem;
+            backdrop-filter: blur(25px);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nft-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 255, 161, 0.08), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .nft-item:hover {
+            transform: translateY(-8px);
+            border-color: var(--primary-mint);
+            box-shadow: 0 20px 40px rgba(0, 255, 161, 0.2);
+        }
+
+        .nft-item:hover::before {
+            left: 100%;
+        }
+
+        .nft-item img {
+            width: 100%;
+            height: auto;
+            border-radius: 12px;
+            transition: transform 0.3s ease;
+        }
+
+        .nft-item:hover img {
+            transform: scale(1.03);
+        }
+
+        .nft-number {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            background: linear-gradient(135deg, var(--primary-mint), var(--secondary-mint));
+            color: var(--bg-dark);
+            padding: 0.6rem 1.2rem;
+            border-radius: 25px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+        }
+
+        .error-message {
+            background: rgba(255, 0, 0, 0.08);
+            border: 1px solid rgba(255, 0, 0, 0.3);
+            border-radius: 15px;
+            padding: 1.5rem;
+            color: #ff6b6b;
+            text-align: center;
+            margin-top: 1.5rem;
+            backdrop-filter: blur(25px);
+            font-weight: 500;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .features-grid {
+                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                padding: 1rem;
+            }
+            
+            .nav {
+                display: none;
+            }
+            
+            .mobile-menu-btn {
+                display: flex;
+            }
+            
+            .hero {
+                padding: 6rem 1rem;
+            }
+            
+            .hero h1 {
+                font-size: 3rem;
+            }
+            
+            .features, .faq {
+                padding: 6rem 1rem;
+            }
+            
+            .features-grid {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+            
+            .feature-card {
+                padding: 2.5rem;
+            }
+            
+            .connect-btn {
+                padding: 0.8rem 2rem;
+                font-size: 0.9rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            .prompt-input {
+                padding: 1.5rem;
+                font-size: 0.9rem;
+            }
+            
+            .generate-btn {
+                padding: 1.5rem 3rem;
+                font-size: 1rem;
+            }
+        }
+
+        /* Accessibility */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-animation"></div>
+    <div class="particles"></div>
+
+    <header class="header">
+        <div class="logo">
+            <div class="logo-icon">🌿</div>
+            <div class="logo-text">Mintly</div>
+        </div>
+        <nav class="nav">
+            <a href="#features">Features</a>
+            <a href="#generator">Generator</a>
+            <a href="#faq">FAQ</a>
+            <a href="#about" target="_blank">Token</a>
+        </nav>
+        <div class="mobile-menu-btn">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+        <button class="connect-btn" id="connect-wallet-btn">Connect Wallet</button>
+    </header>
+
+    <main>
+        <section class="hero" id="generator">          
+            <h1>Mint Your Vision Into Reality</h1>
+            <p>Transform your creative ideas into unique NFT collections with our advanced AI technology. From concept to blockchain in minutes.</p>
+            
+            <div class="cta-section">
+                <div class="prompt-container">
+                    <input type="text" class="prompt-input" placeholder="Describe your dream NFT collection...">
+                </div>
+                <button class="generate-btn" id="create-nft-btn">Generate NFT Collection</button>
+                <div class="tries-remaining" id="tries-remaining">2 demo generations remaining</div>
+            </div>
+            
+            <!-- NFT Generation Area -->
+            <div class="nft-generation-area" id="nft-area" style="display: none;">
+                <div class="loading-container" id="loading-container" style="display: none;">
+                    <div class="loading-text">Creating Your NFTs...</div>
+                    <div class="loading-dots">
+                        <div class="loading-dot"></div>
+                        <div class="loading-dot"></div>
+                        <div class="loading-dot"></div>
+                    </div>
+                </div>
+                
+                <div class="nft-gallery" id="nft-gallery"></div>
+                
+                <div class="error-message" id="error-message" style="display: none;"></div>
+            </div>
+
+        </section>
+
+        <section class="features" id="features">
+            <div class="section-header">
+                <div class="section-tag">Next-Gen Technology</div>
+                <h2 class="section-title">Everything You Need to Create</h2>
+                <p class="section-description">
+                    Our platform combines cutting-edge AI with blockchain technology to deliver the most advanced NFT creation experience available.
+                </p>
+            </div>
+            
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🎯</div>
+                    <h4>AI-Powered Generation</h4>
+                    <p>Advanced machine learning algorithms create unique, high-quality artworks based on your prompts with unprecedented detail and creativity.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">🎭</div>
+                    <h4>Trait Customization</h4>
+                    <p>Fine-tune rarity distributions, layer combinations, and trait probabilities to create truly unique collections that stand out.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">🌐</div>
+                    <h4>Multi-Chain Support</h4>
+                    <p>Deploy across multiple blockchains including Ethereum, Polygon, and Solana with optimized gas fees and fast transactions.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="faq" id="faq">
+            <h2>Frequently Asked Questions</h2>
+            
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFaq(this)">
+                    <span>Which blockchain networks are supported?</span>
+                    <span class="faq-toggle">▼</span>
+                </div>
+                <div class="faq-answer">
+                    Mintly supports major blockchain networks including Ethereum, Polygon, Solana, and Binance Smart Chain. You can choose your preferred network during the minting process, and we optimize for the best gas fees and transaction speeds.
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFaq(this)">
+                    <span>Can I sell my NFTs on major marketplaces?</span>
+                    <span class="faq-toggle">▼</span>
+                </div>
+                <div class="faq-answer">
+                    Absolutely! All NFTs created with Mintly are compatible with popular marketplaces like OpenSea, Rarible, SuperRare, and Foundation. We provide standard-compliant metadata and ensure seamless integration.
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFaq(this)">
+                    <span>What file formats are supported?</span>
+                    <span class="faq-toggle">▼</span>
+                </div>
+                <div class="faq-answer">
+                    We generate high-resolution images in PNG format and provide metadata in standard JSON format. We also support animated GIFs and can export to various formats based on your collection needs.
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFaq(this)">
+                    <span>Is there a limit on collection size?</span>
+                    <span class="faq-toggle">▼</span>
+                </div>
+                <div class="faq-answer">
+                    No limits! Whether you want to create a small exclusive collection of 100 pieces or a massive 10,000+ piece collection, Mintly can handle projects of any size with consistent quality and style.
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFaq(this)">
+                    <span>How much does it cost to use Mintly?</span>
+                    <span class="faq-toggle">▼</span>
+                </div>
+                <div class="faq-answer">
+                    We offer flexible pricing with free demo generations to get started. Pro plans include unlimited generations, priority processing, and advanced features. Check our pricing page for detailed information.
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFaq(this)">
+                    <span>What payment methods are accepted?</span>
+                    <span class="faq-toggle">▼</span>
+                </div>
+                <div class="faq-answer">
+                    We accept both cryptocurrency payments (ETH, MATIC, SOL, BNB) and traditional payment methods including credit cards and PayPal for maximum convenience.
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // Floating Particles System
+        function createParticles() {
+            const particlesContainer = document.querySelector('.particles');
+            
+            for (let i = 0; i < 30; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDuration = (Math.random() * 10 + 5) + 's';
+                particle.style.animationDelay = Math.random() * 5 + 's';
+                
+                particlesContainer.appendChild(particle);
+            }
+        }
+
+        // FAQ Toggle
+        function toggleFaq(element) {
+            const faqItem = element.parentElement;
+            const isActive = faqItem.classList.contains('active');
+            
+            document.querySelectorAll('.faq-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            if (!isActive) {
+                faqItem.classList.add('active');
+            }
+        }
+
+        // Smooth scroll effects
+        window.addEventListener('scroll', () => {
+            const scrolled = window.pageYOffset;
+            const rate = scrolled * -0.3;
+            
+            const bgAnimation = document.querySelector('.bg-animation');
+            bgAnimation.style.transform = `translateY(${rate}px)`;
+        });
+
+        // Intersection Observer for animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0) scale(1)';
+                }
+            });
+        }, observerOptions);
+
+        // Animate elements on scroll
+        document.querySelectorAll('.feature-card, .faq-item').forEach(element => {
+            element.style.opacity = '0';
+            element.style.transform = 'translateY(30px) scale(0.95)';
+            element.style.transition = 'all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+            observer.observe(element);
+        });
+
+        // Mobile menu toggle
+        document.querySelector('.mobile-menu-btn').addEventListener('click', function() {
+            const nav = document.querySelector('.nav');
+            nav.style.display = nav.style.display === 'flex' ? 'none' : 'flex';
+        });
+
+        // Initialize particles
+        createParticles();
+
+        // Typing effect for placeholder
+        const promptInput = document.querySelector('.prompt-input');
+        const placeholders = [
+            'Describe your dream NFT collection...',
+            'Create futuristic robots with glowing eyes...',
+            'Generate mystical forest creatures...',
+            'Design abstract geometric patterns...',
+            'Build underwater kingdoms with mermaids...'
+        ];
+        
+        let currentPlaceholder = 0;
+        
+        function typePlaceholder() {
+            const placeholder = placeholders[currentPlaceholder];
+            let index = 0;
+            
+            const typeInterval = setInterval(() => {
+                promptInput.placeholder = placeholder.substring(0, index);
+                index++;
+                
+                if (index > placeholder.length) {
+                    clearInterval(typeInterval);
+                    setTimeout(() => {
+                        currentPlaceholder = (currentPlaceholder + 1) % placeholders.length;
+                        setTimeout(typePlaceholder, 1000);
+                    }, 3000);
+                }
+            }, 60);
+        }
+        
+        setTimeout(typePlaceholder, 2000);
+
+        // Connect Wallet Button Alert
+        document.getElementById('connect-wallet-btn').addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            const alertModal = document.createElement('div');
+            alertModal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.85);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 10000;
+                backdrop-filter: blur(15px);
+            `;
+            
+            const alertBox = document.createElement('div');
+            alertBox.style.cssText = `
+                background: var(--bg-card);
+                border: 2px solid var(--primary-mint);
+                border-radius: 24px;
+                padding: 3rem;
+                max-width: 450px;
+                text-align: center;
+                backdrop-filter: blur(25px);
+                box-shadow: 0 25px 60px rgba(0, 255, 161, 0.3);
+            `;
+            
+            alertBox.innerHTML = `
+                <div style="color: var(--primary-mint); font-size: 3rem; margin-bottom: 1.5rem;">🔗</div>
+                <h3 style="color: var(--text-primary); margin-bottom: 1.5rem; font-family: 'Inter', sans-serif; font-weight: 700; font-size: 1.4rem;">Wallet Connection</h3>
+                <p style="color: var(--text-secondary); margin-bottom: 2.5rem; line-height: 1.6; font-size: 1rem;">This feature will be available after our official launch. Stay tuned for updates!</p>
+                <button onclick="this.parentElement.parentElement.remove()" style="
+                    background: linear-gradient(135deg, var(--primary-mint), var(--secondary-mint));
+                    border: none;
+                    padding: 1rem 2.5rem;
+                    border-radius: 25px;
+                    color: var(--bg-dark);
+                    font-weight: 700;
+                    font-family: 'Inter', sans-serif;
+                    cursor: pointer;
+                    font-size: 1rem;
+                    transition: all 0.3s ease;
+                " onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">Got it!</button>
+            `;
+            
+            alertModal.appendChild(alertBox);
+            document.body.appendChild(alertModal);
+            
+            alertModal.addEventListener('click', function(e) {
+                if (e.target === alertModal) {
+                    alertModal.remove();
+                }
+            });
+        });
+
+        // NFT Generation System
+        async function initializeNFTGenerator() {
+            const { GoogleGenAI } = await import('https://esm.sh/@google/genai@0.7.0/es2022/genai.mjs');
+            
+            let apiKey = 'AIzaSyBMOqsjKB2P5wsCvujCr6ZIulGmparFURQ';
+            let ai;
+            let chat;
+            let nftCounter = 0;
+            let remainingTries = 2;
+
+            function initializeAI() {
+                ai = new GoogleGenAI({ apiKey });
+                chat = ai.chats.create({
+                    model: 'gemini-2.0-flash-exp',
+                    config: {
+                        responseModalities: ['TEXT', 'IMAGE'],
+                    },
+                    history: [],
+                });
+            }
+
+            initializeAI();
+
+            const createNftBtn = document.querySelector('#create-nft-btn');
+            const nftArea = document.querySelector('#nft-area');
+            const loadingContainer = document.querySelector('#loading-container');
+            const nftGallery = document.querySelector('#nft-gallery');
+            const errorMessage = document.querySelector('#error-message');
+            const promptInput = document.querySelector('.prompt-input');
+            const triesRemaining = document.querySelector('#tries-remaining');
+
+            function updateTriesDisplay() {
+                if (remainingTries > 0) {
+                    triesRemaining.textContent = `${remainingTries} demo generations remaining`;
+                    triesRemaining.className = 'tries-remaining';
+                } else {
+                    triesRemaining.textContent = 'No demo generations left';
+                    triesRemaining.className = 'tries-remaining warning';
+                    
+                    createNftBtn.disabled = true;
+                    createNftBtn.parentElement.className = 'tooltip';
+                    
+                    const tooltip = document.createElement('span');
+                    tooltip.className = 'tooltiptext';
+                    tooltip.innerHTML = 'Demo limit reached. Connect your wallet after launch to generate unlimited NFT collections with Mintly Pro.';
+                    createNftBtn.parentElement.appendChild(tooltip);
+                }
+            }
+
+            function decrementTries() {
+                if (remainingTries > 0) {
+                    remainingTries--;
+                    updateTriesDisplay();
+                }
+            }
+
+            updateTriesDisplay();
+
+            const additionalInstructions = ` Create 8 unique, high-quality NFT artworks that form a cohesive collection. Each piece should be distinct yet part of the same artistic universe. Use rich colors, intricate details, and professional digital art techniques. The style should be modern and appealing to NFT collectors. Make each artwork centered, well-composed, and ready for minting as premium NFTs.`;
+
+            function enhanceUserPrompt(userInput) {
+                // If user input is empty or very short, provide a default
+                if (!userInput || userInput.length < 3) {
+                    return "mystical fantasy creatures with magical elements";
+                }
+                
+                // Clean and enhance the user input
+                let enhancedPrompt = userInput.trim();
+                
+                // Add context if the prompt seems incomplete
+                if (enhancedPrompt.length < 20) {
+                    enhancedPrompt += " with intricate details and vibrant colors";
+                }
+                
+                // Add NFT-specific enhancements if not already mentioned
+                if (!enhancedPrompt.toLowerCase().includes('nft') && 
+                    !enhancedPrompt.toLowerCase().includes('digital art') &&
+                    !enhancedPrompt.toLowerCase().includes('artwork')) {
+                    enhancedPrompt += ", digital artwork style";
+                }
+                
+                // Ensure professional quality keywords
+                if (!enhancedPrompt.toLowerCase().includes('high quality') &&
+                    !enhancedPrompt.toLowerCase().includes('detailed') &&
+                    !enhancedPrompt.toLowerCase().includes('professional')) {
+                    enhancedPrompt += ", high quality and detailed";
+                }
+                
+                return enhancedPrompt;
+            }
+
+            async function addNFTToGallery(image) {
+                nftCounter++;
+                const nftItem = document.createElement('div');
+                nftItem.className = 'nft-item';
+                
+                const nftNumber = document.createElement('div');
+                nftNumber.className = 'nft-number';
+                nftNumber.textContent = `#${nftCounter.toString().padStart(3, '0')}`;
+                
+                nftItem.appendChild(image);
+                nftItem.appendChild(nftNumber);
+                nftGallery.appendChild(nftItem);
+
+                nftItem.style.opacity = '0';
+                nftItem.style.transform = 'translateY(30px) scale(0.9)';
+                setTimeout(() => {
+                    nftItem.style.transition = 'all 0.5s ease';
+                    nftItem.style.opacity = '1';
+                    nftItem.style.transform = 'translateY(0) scale(1)';
+                }, 100);
+            }
+
+            function parseError(error) {
+                const regex = /{"error":(.*)}/gm;
+                const m = regex.exec(error);
+                try {
+                    const e = m[1];
+                    const err = JSON.parse(e);
+                    return err.message;
+                } catch (e) {
+                    return error;
+                }
+            }
+
+            async function generateNFTs() {
+                if (remainingTries <= 0) return;
+
+                if (!chat) {
+                    errorMessage.innerHTML = 'Connection failed. Please try again.';
+                    errorMessage.style.display = 'block';
+                    return;
+                }
+
+                decrementTries();
+
+                const userInput = promptInput.value.trim();
+                const enhancedPrompt = enhanceUserPrompt(userInput);
+                
+                nftCounter = 0;
+                nftGallery.innerHTML = '';
+                errorMessage.style.display = 'none';
+                loadingContainer.style.display = 'block';
+                nftArea.style.display = 'block';
+                
+                createNftBtn.disabled = true;
+                createNftBtn.style.opacity = '0.5';
+                
+                nftArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+                try {
+                    chat.history.length = 0;
+
+                    const result = await chat.sendMessageStream({
+                        message: enhancedPrompt + additionalInstructions,
+                    });
+
+                    let text = '';
+                    let img = null;
+
+                    for await (const chunk of result) {
+                        for (const candidate of chunk.candidates) {
+                            for (const part of candidate.content.parts ?? []) {
+                                if (part.text) {
+                                    text += part.text;
+                                } else {
+                                    try {
+                                        const data = part.inlineData;
+                                        if (data) {
+                                            img = document.createElement('img');
+                                            img.src = `data:image/png;base64,` + data.data;
+                                            img.style.width = '100%';
+                                            img.style.height = 'auto';
+                                            img.style.borderRadius = '12px';
+                                        }
+                                    } catch (e) {
+                                        console.log('No image data', chunk);
+                                    }
+                                }
+                                
+                                if (text && img) {
+                                    if (text.includes("Image Generation: enabled")) {
+                                        text = text.replace(/Image Generation: enabled/g, "");
+                                    }
+
+                                    await addNFTToGallery(img);
+                                    text = '';
+                                    img = null;
+                                }
+                            }
+                        }
+                    }
+
+                    loadingContainer.style.display = 'none';
+                    
+                } catch (e) {
+                    const msg = parseError(e);
+                    errorMessage.innerHTML = `Generation failed: ${msg}`;
+                    errorMessage.style.display = 'block';
+                    loadingContainer.style.display = 'none';
+                }
+
+                if (remainingTries > 0) {
+                    createNftBtn.disabled = false;
+                    createNftBtn.style.opacity = '1';
+                }
+            }
+
+            createNftBtn.addEventListener('click', generateNFTs);
+        }
+
+        // Initialize NFT Generator
+        initializeNFTGenerator();
+    </script>
+</body>
+</html>
