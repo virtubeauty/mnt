@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mintly - AI NFT Creator</title>
+	<link rel="icon" type="image/x-icon" href="favicon.ico">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
@@ -1229,7 +1230,7 @@
 
             updateTriesDisplay();
 
-            const additionalInstructions = ` Create 8 unique, high-quality NFT artworks that form a cohesive collection. Each piece should be distinct yet part of the same artistic universe. Use rich colors, intricate details, and professional digital art techniques. The style should be modern and appealing to NFT collectors. Make each artwork centered, well-composed, and ready for minting as premium NFTs.`;
+            const additionalInstructions = ` high-quality NFT artworks that form a cohesive collection. Each piece should be distinct yet part of the same artistic universe. Use rich colors, intricate details, and professional digital art techniques. The style should be modern and appealing to NFT collectors. Make each artwork centered, well-composed, and ready for minting as premium NFTs.`;
 
             function enhanceUserPrompt(userInput) {
                 // If user input is empty or very short, provide a default
@@ -1243,20 +1244,6 @@
                 // Add context if the prompt seems incomplete
                 if (enhancedPrompt.length < 20) {
                     enhancedPrompt += " with intricate details and vibrant colors";
-                }
-                
-                // Add NFT-specific enhancements if not already mentioned
-                if (!enhancedPrompt.toLowerCase().includes('nft') && 
-                    !enhancedPrompt.toLowerCase().includes('digital art') &&
-                    !enhancedPrompt.toLowerCase().includes('artwork')) {
-                    enhancedPrompt += ", digital artwork style";
-                }
-                
-                // Ensure professional quality keywords
-                if (!enhancedPrompt.toLowerCase().includes('high quality') &&
-                    !enhancedPrompt.toLowerCase().includes('detailed') &&
-                    !enhancedPrompt.toLowerCase().includes('professional')) {
-                    enhancedPrompt += ", high quality and detailed";
                 }
                 
                 return enhancedPrompt;
@@ -1325,7 +1312,7 @@
                     chat.history.length = 0;
 
                     const result = await chat.sendMessageStream({
-                        message: enhancedPrompt + additionalInstructions,
+                        message: 'Create 9 unique '+ enhancedPrompt + additionalInstructions,
                     });
 
                     let text = '';
